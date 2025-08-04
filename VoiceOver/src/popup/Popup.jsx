@@ -12,7 +12,6 @@ export const Popup = () => {
   const minus = () => {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
-      console.log('Recorder Stopped');
     }
   }
 
