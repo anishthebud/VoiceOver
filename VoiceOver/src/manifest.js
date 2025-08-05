@@ -26,7 +26,7 @@ export default defineManifest({
   },
   content_scripts: [
     {
-      matches: ['https://youtube.com/watch*'],
+      matches: ['http://*/*', 'https://*/*'],
       js: ['src/contentScript/index.js'],
     },
   ],
