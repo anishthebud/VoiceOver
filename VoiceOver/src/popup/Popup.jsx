@@ -16,34 +16,10 @@ export const Popup = () => {
   }
 
   const add = async () => {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-
-        mediaRecorder.ondataavailable = event => {
-          if (event.data.size > 0) {
-            audioChunks.push(event.data);
-            console.log('audio recording');
-          }
-        };
-
-        mediaRecorder.onstop = () => {
-          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-          const audioUrl = URL.createObjectURL(audioBlob);
-
-          const link = document.createElement('a');
-          link.href = audioUrl;
-          link.download = 'recording.webm';
-          link.click();
-        };
-
-        mediaRecorder.start();
-        console.log(mediaRecorder);
-      })
-      .catch(err => {
-        console.error('Error accessing mic:', err);
-    });
+    // Send message to background to start recording
+    chrome.runtime.sendMessage({
+      type: 'START_VO'
+    })
   }
 
   return (
