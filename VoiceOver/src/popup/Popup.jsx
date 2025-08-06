@@ -9,13 +9,15 @@ export const Popup = () => {
 
   const minus = () => {
     chrome.runtime.sendMessage({ type: 'END_VO' }, (response) => {
-      console.log(response.audioUrl);
       setAudioUrl(response.audioUrl);
 
-      const downloadLink = document.createElement('a');
-      downloadLink.href = response.audioUrl;
-      downloadLink.download = 'recorded_audio.webm';
-      downloadLink.click();
+      fetch('http://localhost:3000/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(response)
+      })
+        .then(res => res.json())
+        .then(data => console.log(data));
 
       return true;
     })
