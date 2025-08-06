@@ -8,9 +8,10 @@ const PORT = 3000;
 server.use(cors());
 server.use(express.json());
 
-server.post('/', (req, res) => {
-  createVideo(req.body);
-  res.json({ reply: "Video has been made" });
+server.post('/', async (req, res) => {
+  const finalBuffer = await createVideo(req.body);
+  res.setHeader('Content-Type', 'video/mp4');
+  res.send(finalBuffer);
 });
 
 

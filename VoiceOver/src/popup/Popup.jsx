@@ -8,16 +8,25 @@ export const Popup = () => {
   const [audioUrl, setAudioUrl] = useState(null);
 
   const minus = () => {
-    chrome.runtime.sendMessage({ type: 'END_VO' }, (response) => {
+    chrome.runtime.sendMessage({ type: 'END_VO' }, async (response) => {
       setAudioUrl(response.audioUrl);
 
-      fetch('http://localhost:3000/', {
+      await fetch('http://localhost:3000/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(response)
       })
-        .then(res => res.json())
-        .then(data => console.log(data));
+        .then(res => {
+           res.arrayBuffer()
+            .then((result) => {
+              // Create a download link for the video
+              const a = document.createElement("a");
+              a.href = videoUrl;
+              a.download = URL.createObjectURL(new Blob([result], { type: "video:mp4" }));
+              a.click();
+            })
+        });
+    
 
       return true;
     })

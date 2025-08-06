@@ -1,3 +1,5 @@
+const { spawn } = require('child_process');
+
 const YTDlpWrap = require('yt-dlp-wrap').default;
 const ytDlpWrap = new YTDlpWrap('yt-dlp.exe');
 
@@ -12,21 +14,31 @@ function formatTime(time) {
 }
 
 function runCommand(timestamp, videoUrl) {
-    let eventEmitter = ytDlpWrap
-        .exec([
-            videoUrl,
-            '--download-sections',
-            timestamp
-        ])
-        .on('ytDlpEvent', (eventType, eventData) =>
-            console.log(eventType, eventData)
-        )
-        .on('error', (error) => console.error(error))
-        .on('close', () => console.log('Done'));
-    console.log(eventEmitter.ytDlpProcess.pid);
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+
+        const vidOnly = spawn('yt-dlp', [
+            '--download-sections', timestamp,
+            '-o', '-',
+            videoUrl
+        ]);
+
+        vidOnly.stdout.on('data', (chunk) => chunks.push(chunk));
+        vidOnly.stderr.on('error', (data) => console.error('error', data.toString()));
+
+        vidOnly.on('close', (exitCode) => {
+            if (exitCode == 0) {
+                const vidBuffer = Buffer.concat(chunks);
+                
+                resolve(vidBuffer);
+            } else {
+                reject(new Error(`yt-dlp exited with code ${exitCode}`));
+            }
+        })
+    })
 }
 
-function createVideo(info) {
+async function createVideo(info) {
     // Get the data from the request
     const { times, audioUrl, videoUrl } = info;
 
@@ -36,7 +48,15 @@ function createVideo(info) {
     const timestamp = "*" + startTime + "-" + endTime;
 
     // Run command
-    runCommand(timestamp, videoUrl);
+    let sendBuffer;
+    await runCommand(timestamp, videoUrl)
+        .then((buffer) => {
+            // TODO: Audio postprocessing
+            sendBuffer = buffer;
+        })
+        .catch((error) => console.log(`command threw the following error: ${error}`))
+
+    return sendBuffer;
 }
 
 module.exports = createVideo;
