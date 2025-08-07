@@ -21,9 +21,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // TODO: Figure out a way to not include system audio (radiating from the microphone)
     video.muted = false;
     times[1] = video.currentTime;
-     stopRecording().then((result) => {
+    stopRecording().then((result) => {
       console.log(result);
-      sendResponse({ times: times, audioBuffer: result });
+      sendResponse({ times: times, audioUrl: result });
      });
   }
   return true;

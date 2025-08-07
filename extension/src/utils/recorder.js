@@ -25,11 +25,9 @@ export async function startRecording() {
 export async function stopRecording () {
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
         return new Promise ((resolve) => {
-            mediaRecorder.onstop = async () => {
-                console.log(chunks);
+            mediaRecorder.onstop = () => {
                 const blob = new Blob(chunks, {type: 'audio/webm' });
-                const audioBuffer = await blob.arrayBuffer();
-                resolve(audioBuffer);
+                resolve(blob);
             }
             mediaRecorder.stop();
         })

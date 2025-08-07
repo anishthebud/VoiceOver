@@ -9,7 +9,8 @@ export const Popup = () => {
 
   const minus = () => {
     chrome.runtime.sendMessage({ type: 'END_VO' }, async (response) => {
-      setAudioUrl(response.audioBuffer);
+      console.log(response);
+      setAudioUrl(response.audioUrl);
 
       await fetch('http://localhost:3000/', {
         method: 'POST',

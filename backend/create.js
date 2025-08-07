@@ -1,7 +1,6 @@
 const { spawn } = require('child_process');
 const ffmpeg = require('fluent-ffmpeg');
 const { Readable } = require('stream');
-const { buffer } = require('stream/consumers');
 
 const YTDlpWrap = require('yt-dlp-wrap').default;
 const ytDlpWrap = new YTDlpWrap('yt-dlp.exe');
@@ -43,7 +42,7 @@ function getVideo(timestamp, videoUrl) {
 
 function bufferToStream(buffer) {
     const stream = new Readable();
-    stream.push(buffer);
+    stream.push(Buffer.from(buffer));
     stream.push(null);
     return stream;
 }
@@ -75,8 +74,11 @@ function addAudioToVideo(videoBuffer, audioBuffer) {
 }
 
 async function createVideo(info) {
+    console.log(info);
     // Get the data from the request
-    const { times, audioBuffer, videoUrl } = info;
+    const { times, audioUrl, videoUrl } = info;
+
+    console.log(await audioUrl.arrayBuffer());
 
     // Format the times properly
     const startTime = formatTime(times[0]);
