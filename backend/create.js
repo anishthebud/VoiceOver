@@ -1,4 +1,7 @@
 const { spawn } = require('child_process');
+const ffmpeg = require('fluent-ffmpeg');
+const { Readable } = require('stream');
+const { buffer } = require('stream/consumers');
 
 const YTDlpWrap = require('yt-dlp-wrap').default;
 const ytDlpWrap = new YTDlpWrap('yt-dlp.exe');
@@ -13,7 +16,7 @@ function formatTime(time) {
     return String(hours).padStart(2, '0') + ":" + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0') + "." + percentage;
 }
 
-function runCommand(timestamp, videoUrl) {
+function getVideo(timestamp, videoUrl) {
     return new Promise((resolve, reject) => {
         const chunks = [];
 
@@ -38,9 +41,42 @@ function runCommand(timestamp, videoUrl) {
     })
 }
 
+function bufferToStream(buffer) {
+    const stream = new Readable();
+    stream.push(buffer);
+    stream.push(null);
+    return stream;
+}
+ 
+function addAudioToVideo(videoBuffer, audioBuffer) {
+    return new Promise((resolve, reject) => {
+        const videoStream = bufferToStream(videoBuffer);
+        const audioStream = bufferToStream(audioBuffer);
+
+        const outputChunks = []
+
+        ffmpeg()
+            .input(videoStream)
+            .inputFormat("mp4")
+            .input(audioStream)
+            .inputFormat("webm")
+            .outputOptions([
+                '-map 0:v:0',
+                '-map 1:a:0',
+                '-c:v copy',
+                '-shortest'
+            ])
+            .format('mp4')
+            .on('error', reject)
+            .on('end', () => resolve(Buffer.concat(outputChunks)))
+            .pipe()
+            .on('data', chunk => outputChunks.push(chunk))
+        })
+}
+
 async function createVideo(info) {
     // Get the data from the request
-    const { times, audioUrl, videoUrl } = info;
+    const { times, audioBuffer, videoUrl } = info;
 
     // Format the times properly
     const startTime = formatTime(times[0]);
@@ -48,14 +84,21 @@ async function createVideo(info) {
     const timestamp = "*" + startTime + "-" + endTime;
 
     // Run command
-    let sendBuffer;
-    await runCommand(timestamp, videoUrl)
+    let videoBuffer;
+    await getVideo(timestamp, videoUrl)
         .then((buffer) => {
             // TODO: Audio postprocessing
-            sendBuffer = buffer;
+            videoBuffer = buffer;
         })
-        .catch((error) => console.log(`command threw the following error: ${error}`))
+        .catch((error) => console.log(`get_video command error: ${error}`));
 
+    let sendBuffer;
+    await addAudioToVideo(videoBuffer, audioBuffer)
+        .then((finalVid) => {
+            sendBuffer = finalVid;
+        })
+        .catch((error) => console.log(`addAudio command error: ${error}`));
+    
     return sendBuffer;
 }
 

@@ -23,7 +23,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     times[1] = video.currentTime;
      stopRecording().then((result) => {
       console.log(result);
-      sendResponse({ times: times, audioUrl: result });
+      sendResponse({ times: times, audioBuffer: result });
      });
   }
   return true;
