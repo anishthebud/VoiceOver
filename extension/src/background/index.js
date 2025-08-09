@@ -10,6 +10,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     chrome.tabs.query({ active: true, currentWindow: true}, (tabs) => {
       const currentTab = tabs[0];
       chrome.tabs.sendMessage(currentTab.id, {type: 'END'}, (response) => {
+        console.log(response);
         sendResponse({...response, videoUrl: currentTab.url});
       })
     })

@@ -1,16 +1,19 @@
 createVideo = require('./create')
 express = require('express');
 cors = require('cors');
+multer = require('multer');
 
 const server = express();
 const PORT = 3000;
+const upload = multer();
 
 server.use(cors());
 server.use(express.json());
 
-server.post('/', async (req, res) => {
+server.post('/', upload.none(), async (req, res) => {
   const finalBuffer = await createVideo(req.body);
-  res.setHeader('Content-Type', 'video/mp4');
+  console.log(finalBuffer);
+  res.setHeader('Content-Type', 'video/webm');
   res.send(finalBuffer);
 });
 
